@@ -1,0 +1,266 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 10vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Overall Layout */
+.homepage {
+  font-family: 'Arial', sans-serif;
+  background: #f4f7fb;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 30px;
+}
+
+/* Header */
+.header {
+  position: absolute;
+  top: 20px;
+  right: 40px;
+  font-size: 20px;
+  color: #333;
+}
+
+/* File Structure */
+.file-structure {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 30px;
+  margin-top: 100px;
+}
+
+/* Folder and Files */
+.folder {
+  background-color: white;
+  border-radius: 8px;
+  width: 250px;
+  box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  transition: transform 0.3s ease;
+}
+
+.folder:hover {
+  transform: translateY(-5px);
+}
+
+.folder-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.folder-name {
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.folder-menu {
+  cursor: pointer;
+  position: relative;
+}
+
+.menu-icon {
+  font-size: 18px;
+}
+
+.menu-options {
+  position: absolute;
+  top: 20px;
+  right: 0;
+  background-color: #fff;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-5px);
+  transition: all 0.2s ease;
+}
+
+.folder-menu:hover .menu-options,
+.file-menu:hover .menu-options {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.empty-folder {
+  text-align: center;
+  color: #777;
+}
+
+.file-items {
+  margin-top: 20px;
+}
+
+.file-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  background: #f9f9f9;
+  border-radius: 5px;
+  margin-bottom: 10px;
+}
+
+.file-item:hover {
+  background: #f0f0f0;
+}
+
+.upload-btn {
+  margin-top: 50px;
+}
+
+.upload-btn button {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.upload-btn button:hover {
+  background-color: #0056b3;
+}
+
+button {
+  font-size: 14px;
+  padding: 5px 10px;
+  border: none;
+  background: #007bff;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #0056b3;
+}
+/* Default text color (for light mode) */
+body {
+  background-color: #f0f0f0; /* Light background color */
+  color: #333; /* Dark text color for readability */
+}
+
+/* Header and main text */
+.header {
+  color: #aa0d0d; /* White text color for the header */
+}
+
+.user-name {
+  font-size: 20px;
+  font-weight: bold;
+  color: #aa0d0d; /* White color for user name in header */
+}
+
+.file-structure {
+  background-color: #aa0d0d; /* White background for file structure */
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark Mode specific styles */
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #121212; /* Dark background for dark mode */
+    color: #a30606; /* Light text color */
+  }
+
+  .header {
+    background-color: #1e1e1e; /* Slightly darker header background */
+  }
+
+  .user-name {
+    color: #941919; /* Light color for the user name in dark mode */
+  }
+
+  .file-structure {
+    background-color: #333333; /* Dark background for file structure */
+    color: #aa0d0d; /* Light color for file/folder text */
+  }
+
+  .folder-header {
+    color: #aa0d0d; /* White color for folder names in dark mode */
+  }
+
+  .folder-name, .file-item span {
+    color: #aa0d0d; /* Ensure text is white in dark mode */
+  }
+
+  .folder-menu .menu-icon, .file-menu .menu-icon {
+    color: #aa0d0d; /* Ensure menu icon is visible */
+  }
+
+  .upload-btn button {
+    background-color: #007bff; /* Button color */
+    color: white; /* Button text */
+  }
+
+  .menu-options button {
+    background-color: #333333;
+    color: white;
+  }
+
+  .empty-folder {
+    color: #888888; /* Light gray text for empty folders */
+  }
+}
+
+/* Light Mode styles */
+@media (prefers-color-scheme: light) {
+  body {
+    background-color: #aa0d0d;
+    color: #333;
+  }
+
+  .file-structure {
+    background-color: #f8f9fa;
+  }
+
+  .folder-header {
+    color: #333;
+  }
+}
