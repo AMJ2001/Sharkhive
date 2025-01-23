@@ -40,8 +40,10 @@
 /* Overall Layout */
 .homepage {
   font-family: 'Arial', sans-serif;
-  background: #f4f7fb;
+  background-image: url('../public/app-bg.jpg');
+  background-size: cover;
   min-height: 100vh;
+  min-width: 200vh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -64,16 +66,31 @@
   flex-wrap: wrap;
   gap: 30px;
   margin-top: 100px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 15px; 
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); 
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 /* Folder and Files */
 .folder {
-  background-color: white;
-  border-radius: 8px;
-  width: 250px;
-  box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+  display: flex;
+  width: 20vh;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 30px;
+  margin-top: 100px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 15px; 
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); 
   padding: 20px;
-  transition: transform 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: transform 0.5s ease;
 }
 
 .folder:hover {
@@ -98,7 +115,9 @@
 }
 
 .menu-icon {
-  font-size: 18px;
+  padding-left: 2vh;
+  font-size: 14px;
+  transition: transform 0.5s ease;
 }
 
 .menu-options {
@@ -127,7 +146,16 @@
 
 .empty-folder {
   text-align: center;
-  color: #777;
+  color: rgba(0, 0, 0, 0.7); /* Dark text with some transparency */
+  font-style: italic; /* Italic text */
+  font-size: 16px; /* Adjust font size for readability */
+  border: 1px solid rgba(0, 0, 0, 0.2); /* Subtle dark border */
+  border-radius: 10px; /* Smooth rounded corners */
+  padding: 10px; /* Add spacing inside the element */
+  backdrop-filter: blur(5px); /* Add blur to emphasize glassy look */
+  -webkit-backdrop-filter: blur(5px); /* Safari compatibility */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+  display: inline-block; /* Wrap content neatly */
 }
 
 .file-items {
@@ -137,14 +165,14 @@
 .file-item {
   display: flex;
   justify-content: space-between;
-  padding: 10px;
-  background: #f9f9f9;
+  padding: 40px;
+  background: #020442;
   border-radius: 5px;
   margin-bottom: 10px;
 }
 
 .file-item:hover {
-  background: #f0f0f0;
+  background: #649a7c;
 }
 
 .upload-btn {
@@ -193,13 +221,6 @@ body {
   font-size: 20px;
   font-weight: bold;
   color: #aa0d0d; /* White color for user name in header */
-}
-
-.file-structure {
-  background-color: #aa0d0d; /* White background for file structure */
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 /* Dark Mode specific styles */
@@ -252,15 +273,30 @@ body {
 /* Light Mode styles */
 @media (prefers-color-scheme: light) {
   body {
-    background-color: #aa0d0d;
-    color: #333;
-  }
-
-  .file-structure {
-    background-color: #f8f9fa;
+    background: #b52452;  /* fallback for old browsers */
+    background: -webkit-linear-gradient(to right, #bf0781, #C33764);  /* Chrome 10-25, Safari 5.1-6 */
+    background: linear-gradient(to right, #8a0e6b, #C33764); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
   }
 
   .folder-header {
     color: #333;
   }
+}
+
+.glass-card {
+  background: white;
+  background: linear-gradient(
+      to right bottom,
+      rgba(255, 255, 255, 0.4),
+      rgba(255, 255, 255, 0.2)
+  );
+  backdrop-filter: blur(1rem);
+  width: 60%;
+  height: 60%;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 5rem;
+  box-shadow: 0 0 1rem rgba(0, 0, 0, 0.2);
 }

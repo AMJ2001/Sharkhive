@@ -4,7 +4,7 @@ import './App.css';
 const HomePage = () => {
   const [showMenu, setShowMenu] = useState(null); // Track which folder/file menu is open
   const [fileStructure, setFileStructure] = useState([
-    { name: 'Documents', type: 'folder', id: 1, items: [] },
+    { name: 'Documents', type: 'folder', id: 1, items: [{ id: 'img1', name: "photo" }] },
     { name: 'Images', type: 'folder', id: 2, items: [] },
   ]);
 
@@ -25,12 +25,12 @@ const HomePage = () => {
 
       {/* Central File Structure */}
       <div className="file-structure">
+        <h1> Directory </h1>
         {fileStructure.map((folder) => (
           <div className="folder" key={folder.id}>
             <div className="folder-header">
               <span className="folder-name">{folder.name}</span>
               <div className="folder-menu" onClick={() => handleMenuClick(folder.id)}>
-                <span className="menu-icon">•••</span>
                 {showMenu === folder.id && (
                   <div className="menu-options">
                     <button>Delete</button>
