@@ -1,4 +1,4 @@
-PROJECT FILE SHARING
+<h1 style="color:darkblue;">PROJECT FILE SHARING</h1>
 
 - **User Registration:** 
 - **User Authentication:** 
