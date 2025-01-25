@@ -1,5 +1,7 @@
-<h1 style="color:darkblue;">PROJECT FILE SHARING</h1>
+<h1>$${\color{lightblue}SHARKHIVE}$$</h1>	
+<h3>$${\color{orange}FILE \space PROJECT}$$</h3>	
 
+## Overview
 - **User Registration:** 
 - **User Authentication:** 
 - **File system:** 
