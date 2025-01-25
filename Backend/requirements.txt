@@ -1,0 +1,4 @@
+django
+pyjwt
+djangorestframework
+qrcode
