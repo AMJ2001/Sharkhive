@@ -1,4 +1,5 @@
 from datetime import timedelta
+import re
 
 import jwt
 from django.conf import settings
@@ -17,7 +18,6 @@ from .serializers import UserRegistrationSerializer
 
 User = get_user_model()
 
-
 @api_view(["POST"])
 def user_api(request):
     """
@@ -25,7 +25,7 @@ def user_api(request):
     """
     action = request.data.get("action")
 
-    if action == "register":
+    if action == "reg":
         return register(request)
     elif action == "login":
         return login(request)
@@ -42,23 +42,20 @@ def register(request):
     serializer = UserRegistrationSerializer(data = request.data)
 
     if serializer.is_valid():
-        name = serializer.validated_data["name"]
+        email = serializer.validated_data["email"]
         username = serializer.validated_data["username"]
         role = serializer.validated_data["role"]
         password = serializer.validated_data["password"]
-
-        if User.objects.filter(username=username).exists():
-            return Response(
-                {"error": "Username already taken!"}, status = status.HTTP_400_BAD_REQUEST
-            )
+        mfa_type = serializer.validated_data["mfa_type"]
 
         hashed_password = make_password(password)
 
         user = User.objects.create(
             username = username,
-            first_name = name,
-            last_name = role,  # update table
+            email = email,
             password = hashed_password,
+            role = role,
+            mfa_type = mfa_type
         )
 
         payload = {
@@ -123,3 +120,27 @@ def login(request):
         )
 
     return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+
+@api_view(["GET"])
+def verify_email(request):
+    """
+    Verify if the email already exists.
+    """
+    email = request.query_params.get('email')
+
+    if not email or not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+        return Response(
+            {"error": "Correct username parameter is required."},
+            status = status.HTTP_400_BAD_REQUEST
+        )
+
+    if User.objects.filter(email = email).exists():
+        return Response(
+            {"error": "Email ID already taken."},
+            status = status.HTTP_400_BAD_REQUEST
+        )
+
+    return Response(
+        {"message": "available"},
+        status = status.HTTP_200_OK
+    )

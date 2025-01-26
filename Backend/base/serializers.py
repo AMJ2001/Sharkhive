@@ -5,7 +5,8 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
 
 class UserRegistrationSerializer(serializers.Serializer):
-    name = serializers.CharField(required=True)
-    username = serializers.CharField(required=True)
-    role = serializers.CharField(required=True)
-    password = serializers.CharField(required=True)  # Password will be hashed in the view
+    email = serializers.CharField(required = True)
+    username = serializers.CharField(required = True)
+    role = serializers.CharField(required = True)
+    password = serializers.CharField(required = True)  # Password will be hashed in the view
+    mfa_type = serializers.CharField(required = False)
