@@ -13,7 +13,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-%1&--y$q5055=z70)l@g+azpp$tf43+5gv)e4xcdx^^d^0vp1m'
+SECRET_KEY = 'py-insecureqTJ-%1&--y$zpp$tf43+5gv)e4xCGx^^d70vp1m'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -95,6 +95,10 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTH_USER_MODEL = 'base.User'
+
+NEXTCLOUD_BASE_URL = "https://your-nextcloud-domain.com"  # Replace with your Nextcloud URL
+NEXTCLOUD_USERNAME = "your_nextcloud_username"
+NEXTCLOUD_PASSWORD = "your_nextcloud_password"
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/

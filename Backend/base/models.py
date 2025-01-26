@@ -18,12 +18,16 @@ class CustomUserManager(BaseUserManager):
         return self.create_user(username, email, password, **extra_fields)
 
 class User(AbstractBaseUser):
+    """
+    Data of each user
+    """
+    id = models.CharField(max_length=50, primary_key=True, unique=True) 
     username = models.CharField(max_length=50, unique=True, null=False)
     email = models.EmailField(max_length=80, unique=True, null=False)
     password = models.CharField(max_length=255, null=False)
     role = models.CharField(max_length=20, null=False)
     mfa_type = models.CharField(max_length=20, null=False)
-    last_login = models.DateTimeField(default = timezone.now())
+    last_login = models.DateTimeField(default = timezone.now)
 
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email', 'role', 'mfa_type']
@@ -32,3 +36,41 @@ class User(AbstractBaseUser):
 
     def __str__(self):
         return str(self.username)
+
+class File(models.Model):
+    """
+    Metadata for file
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='files')
+    file_name = models.CharField(max_length=255)
+    file_type = models.CharField(max_length=50)
+    file_size = models.PositiveIntegerField()  # in bytes
+    upload_date = models.DateTimeField(default=timezone.now)
+    file_url = models.URLField()  # Path to the stored file
+
+    objects = models.Manager()
+
+    def __str__(self):
+        return str(self.file_name)
+
+class FilePermission(models.Model):
+    """
+    Data for allowed actions for files
+    """
+    file = models.ForeignKey(File, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    permission_type = models.CharField(
+        max_length=20, choices=[('read', 'Read'), ('write', 'Write'), ('delete', 'Delete')]
+    )
+
+    class Meta:
+        """
+        Each user can have only 1 permission type per file
+        """
+        unique_together = ('file', 'user')
+
+    def __str__(self):
+        try:
+            return f"{self.user.username} - {self.permission_type} - {self.file.file_name}"
+        except AttributeError:
+            return f"Permission: {self.permission_type} - File: {self.file}"    

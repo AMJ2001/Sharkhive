@@ -2,6 +2,7 @@ from datetime import timedelta
 import re
 
 import jwt
+import uuid
 from django.conf import settings
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import authenticate
@@ -11,10 +12,10 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from base.serializers import LoginSerializer
-from base.utils import generate_random_mfa_code, generate_totp_qr_code
+from base.utils import encrypt_file, generate_random_mfa_code, generate_totp_qr_code, upload_to_nextcloud
 
-from .models import User
-from .serializers import UserRegistrationSerializer
+from .models import User, File
+from .serializers import UserRegistrationSerializer, FileUploadSerializer
 
 User = get_user_model()
 
@@ -51,6 +52,7 @@ def register(request):
         hashed_password = make_password(password)
 
         user = User.objects.create(
+            id = uuid.uuid4().hex[:6],
             username = username,
             email = email,
             password = hashed_password,
@@ -144,3 +146,41 @@ def verify_email(request):
         {"message": "available"},
         status = status.HTTP_200_OK
     )
+
+@api_view(['POST'])
+def upload_file(request):
+    """
+    Endpoint to upload an encrypted file to Nextcloud
+    """
+    serializer = FileUploadSerializer(data=request.data)
+
+    if serializer.is_valid():
+        file = request.FILES['file']
+        file_data = file.read()
+        file_name = serializer.validated_data['file_name']
+        file_type = serializer.validated_data['file_type']
+
+        # Encrypt the file
+        encrypted_file_data = encrypt_file(file_data)
+
+        try:
+            # Upload the encrypted file to Nextcloud
+            file_url = upload_to_nextcloud(file_name, encrypted_file_data)
+
+            # Save file metadata in the database
+            new_file = File.objects.create(
+                user=request.user,
+                name=file_name,
+                file_type=file_type,
+                file_url=file_url
+            )
+
+            return Response({
+                "message": "File uploaded successfully",
+                "file_url": file_url
+            }, status=201)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+    return Response(serializer.errors, status=400)

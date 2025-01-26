@@ -1,7 +1,15 @@
-import pyotp
 import random
+import pyotp
+
 # from twilio.rest import Client
 import qrcode
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad
+import requests
+
+from secure_file_service import settings
+# AES Encryption Key
+AES_KEY = settings.SECRET_KEY.encode('utf-8')
 
 def generate_totp_qr_code(totp_key):
     totp = pyotp.TOTP(totp_key)
@@ -29,5 +37,32 @@ def verify_sms_mfa_code(user, entered_code):
 def verify_totp_mfa_code(user, entered_code):
     totp = pyotp.TOTP(user.totp_key)
     if totp.verify(entered_code):
-       return True #jwt can be generated now
+        return True #jwt can be generated now
     return False
+
+def encrypt_file(file_data):
+    cipher = AES.new(AES_KEY, AES.MODE_CBC)
+    encrypted_data = cipher.encrypt(pad(file_data, AES.block_size))
+    return cipher.iv + encrypted_data  # Return IV + encrypted file data
+
+def upload_to_nextcloud(file_name, file_data):
+    """
+    Upload the file to Nextcloud via WebDAV and return the public URL
+    """
+    nextcloud_base_url = settings.NEXTCLOUD_BASE_URL  # Base URL for Nextcloud
+    username = settings.NEXTCLOUD_USERNAME  # Nextcloud username
+    password = settings.NEXTCLOUD_PASSWORD  # Nextcloud password
+
+    upload_path = f"/remote.php/dav/files/{username}/{file_name}"
+    full_url = nextcloud_base_url + upload_path
+
+    response = requests.put(
+        full_url,
+        data=file_data,
+        auth=(username, password),
+    )
+
+    if response.status_code == 201:
+        return full_url  # Return the Nextcloud URL
+    else:
+        raise Exception(f"Failed to upload to Nextcloud: {response.status_code}, {response.text}")
