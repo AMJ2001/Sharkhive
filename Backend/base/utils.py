@@ -3,13 +3,12 @@ import pyotp
 
 # from twilio.rest import Client
 import qrcode
+import requests
+import hashlib
+
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
-import requests
-
 from secure_file_service import settings
-# AES Encryption Key
-AES_KEY = settings.SECRET_KEY.encode('utf-8')
 
 def generate_totp_qr_code(totp_key):
     totp = pyotp.TOTP(totp_key)
@@ -41,9 +40,10 @@ def verify_totp_mfa_code(user, entered_code):
     return False
 
 def encrypt_file(file_data):
-    cipher = AES.new(AES_KEY, AES.MODE_CBC)
-    encrypted_data = cipher.encrypt(pad(file_data, AES.block_size))
-    return cipher.iv + encrypted_data  # Return IV + encrypted file data
+    cipher = AES.new(hashlib.sha256(settings.SECRET_KEY.encode()).digest(), AES.MODE_CBC)
+    ciphertext = cipher.encrypt(pad(file_data, AES.block_size))
+
+    return cipher.iv + ciphertext
 
 def upload_to_nextcloud(file_name, file_data):
     """

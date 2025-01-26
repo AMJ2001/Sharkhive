@@ -96,9 +96,9 @@ AUTH_PASSWORD_VALIDATORS = [
 
 AUTH_USER_MODEL = 'base.User'
 
-NEXTCLOUD_BASE_URL = "https://your-nextcloud-domain.com"  # Replace with your Nextcloud URL
-NEXTCLOUD_USERNAME = "your_nextcloud_username"
-NEXTCLOUD_PASSWORD = "your_nextcloud_password"
+NEXTCLOUD_BASE_URL = "https://oto.lv.tab.digital"
+NEXTCLOUD_USERNAME = "aayush.mishra@u-next.com"
+NEXTCLOUD_PASSWORD = "Nextcloud@123"
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/

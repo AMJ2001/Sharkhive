@@ -170,7 +170,7 @@ def upload_file(request):
             # Save file metadata in the database
             new_file = File.objects.create(
                 user=request.user,
-                name=file_name,
+                file_name=file_name,
                 file_type=file_type,
                 file_url=file_url
             )
