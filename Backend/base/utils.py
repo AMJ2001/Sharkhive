@@ -18,7 +18,7 @@ def generate_totp_qr_code(totp_key):
     return qr_code_url
 
 def generate_random_mfa_code():
-    return str(random.randint(100000, 999999))
+    return random.randint(100000, 999999)
 
 # def send_sms(phone_number, mfa_code):
 #     client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
@@ -27,11 +27,6 @@ def generate_random_mfa_code():
 #         from_=TWILIO_PHONE_NUMBER,
 #         to=phone_number
 #     )
-
-def verify_sms_mfa_code(user, entered_code):
-    if user.mfa_code == entered_code:
-        return True #jwt can be generated now
-    return False
 
 def verify_totp_mfa_code(user, entered_code):
     totp = pyotp.TOTP(user.totp_key)

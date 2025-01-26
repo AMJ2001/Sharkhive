@@ -22,6 +22,11 @@ ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 
 # Application definition
+AUTH_USER_MODEL = 'base.User'
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    )
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -93,8 +98,6 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-
-AUTH_USER_MODEL = 'base.User'
 
 NEXTCLOUD_BASE_URL = "https://oto.lv.tab.digital"
 NEXTCLOUD_USERNAME = "aayush.mishra@u-next.com"
