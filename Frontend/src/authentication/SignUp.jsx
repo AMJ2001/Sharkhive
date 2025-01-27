@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import bcrypt from 'bcryptjs';
-import Cookies from 'js-cookie';
+import { jwtDecode } from 'jwt-decode';
 import { setUserEmail, setUserData } from '../store';
 
 const SignUp = () => {
@@ -93,8 +93,7 @@ const SignUp = () => {
       const data = await response.json();
   
       if (response.status === 200) {
-        Cookies.set('jwtToken', data.access_token, { httpOnly: true }); // Setting JWT token in HTTP-only cookie
-        dispatch(setUserData(data.user));
+        dispatch(setUserData(jwtDecode(data.access_token)));
         setErrorMessage('');
         navigator('./directories')
       } else {

@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
-import Cookies from 'js-cookie';
+import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import './App.css';
 import HomePage from './Home';  
 import SignUp from './authentication/SignUp'; 
+import Login from './authentication/Login'; // Assuming you have a Login component
 import { Logout } from './Logout';
 import logo from './logo.svg';
 
@@ -12,8 +12,7 @@ function App() {
     <Router>
       <div className="App">
         <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <Logout />
+          <AppContent />
           <AppRoutes />
         </header>
       </div>
@@ -21,17 +20,33 @@ function App() {
   );
 }
 
+function AppContent() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Only show the title and buttons on the main page
+  if (location.pathname !== '/') {
+    return null;
+  }
+
+  return (
+    <div className="app-content">
+      <h1>Secure File Storage</h1>
+      <div className="button-container">
+        <button onClick={() => navigate('/signup')}>Sign Up</button>
+        <button onClick={() => navigate('/login')}>Login</button>
+      </div>
+    </div>
+  );
+}
+
 function AppRoutes() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = Cookies.get('jwtToken');
-    if (token && isTokenValid(token)) {
-      // Token is valid, proceed with the session
-    } else {
-      // Token is invalid or expired, redirect to signup
-      navigate('/signup');
-    }
+    // if (token && isTokenValid(token)) {
+    //   navigate('./directories')
+    // }
   }, [navigate]);
 
   const isTokenValid = (token) => {
@@ -45,10 +60,14 @@ function AppRoutes() {
   };
 
   return (
-    <Routes>
-      <Route path="/directories" element={<HomePage />} /> 
-      <Route path="/signup" element={<SignUp />} />
-    </Routes>
+    <>
+          {!['/', '/login', '/signup'].includes(window.location.pathname) && <Logout />}
+      <Routes>
+        <Route path="/directories" element={<HomePage />} /> 
+        <Route path="/signup" element={<SignUp />} />
+        <Route path="/login" element={<Login />} />
+      </Routes>
+    </>
   );
 }
 

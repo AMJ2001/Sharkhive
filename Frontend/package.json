@@ -8,6 +8,7 @@
     "bcryptjs": "^2.4.3",
     "cra-template": "1.2.0",
     "js-cookie": "^3.0.5",
+    "jwt-decode": "^4.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-redux": "^9.2.0",

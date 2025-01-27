@@ -89,22 +89,26 @@ def login(request):
         code = "code" in request.data and request.data["code"]
         user = User.objects.get(email=email)
 
-        if (code):
-            if ((email in mfa_codes) and (code == mfa_codes[email])):
+        if code:
+            if ((email in mfa_codes) and (int(code) == mfa_codes[email])):
                 payload = {
                     "id": user.id,
-                    "email": user.username,
+                    "email": user.email,
                     "exp": timezone.now() + timedelta(hours = 1),
                 }
-                token = jwt.encode(payload, settings.SECRET_KEY, algorithm = "HS256")
+                token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
 
-                return Response(
+                resp = Response(
                     {"message": "Login successful!", "access_token": token},
-                    status = status.HTTP_200_OK,
+                    status=status.HTTP_200_OK,
                 )
+                resp['Access-Control-Allow-Origin'] = 'http://localhost:3000'
+                resp['Access-Control-Allow-Credentials'] = 'true'
+                resp.set_cookie('jwtToken', token, httponly=True, secure=True, samesite='None', path='/')
+                return resp
             else:
                 return Response({"error": "Invalid code"}, status = status.HTTP_400_BAD_REQUEST)
-            
+
         valid = check_password(password, user.password)
 
         if valid:
@@ -134,8 +138,10 @@ def login(request):
             #     recipient_list=['user@client.com'],
             #     fail_silently=False,
             # )
-            return Response({"success": "A code has been sent to your email"}, status = status.HTTP_200_OK)
-
+            resp = Response({"success": "A code has been sent to your email"}, status = status.HTTP_200_OK)
+            resp['Access-Control-Allow-Origin'] = 'http://localhost:3000'
+            resp['Access-Control-Allow-Credentials'] = 'true'
+            return resp
         return Response(
             {"error": "Invalid credentials!"}, status = status.HTTP_400_BAD_REQUEST
         )
@@ -223,7 +229,8 @@ def get_user_files(request):
     """
     List of all the files and their metadata for a particular user
     """
-    token = request.headers.get('Authorization')
+    token = request.COOKIES.get('jwtToken')[2:-1]
+
     if not token:
         return Response({"error": "Authorization token missing!"}, status=status.HTTP_400_BAD_REQUEST)
     
@@ -233,14 +240,13 @@ def get_user_files(request):
             token = token[7:]
 
         decoded_token = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
-        
         email = decoded_token.get('email')
-        
+
         if not email:
             return Response({"error": "Invalid token!"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        user = get_object_or_404(get_user_model(), username=email)
-        
+
+        user = get_object_or_404(get_user_model(), email=email)
+
         files = File.objects.filter(user=user)
 
         file_data = [
