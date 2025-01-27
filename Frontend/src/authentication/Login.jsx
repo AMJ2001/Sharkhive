@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import CryptoJS from 'crypto-js';
 import { useNavigate } from 'react-router-dom';
-import { setUserEmail, setUserData } from '../store';
+import { setUserData } from '../store';
 import { secretKey } from '../store';
 
 const Login = () => {

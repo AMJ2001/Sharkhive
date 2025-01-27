@@ -44,7 +44,7 @@ const HomePage = () => {
       {/* Header with user info */}
       <header className="header">
         <div className="user-name">
-          Welcome {userData.name || userData.email.trim().split('@')[0].split('.')[0]}
+          Welcome {userData.name || userData.email?.trim().split('@')[0].split('.')[0]}
         </div>
       </header>
   
@@ -56,7 +56,7 @@ const HomePage = () => {
             <div className="file-card" key={item.file_name}>
               {/* Random Logo */}
               <div className="file-card-logo">
-                <img src="./public/fileIcon.png" alt="File Logo" className="file-logo" />
+                <img src="/fileIcon.png" alt="File Logo" className="file-logo" />
               </div>
   
               {/* File Details */}

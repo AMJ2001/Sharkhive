@@ -68,12 +68,18 @@ def register(request):
             "username": user.username,
             "exp": timezone.now() + timedelta(hours = 1),
         }
-        token = jwt.encode(payload, settings.SECRET_KEY, algorithm = "HS256")
-
-        return Response(
-            {"message": "User registered successfully!", "access_token": token},
-            status = status.HTTP_201_CREATED,
-        )
+        token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
+        userData = json.loads(serializers.serialize('json', [user]))[0]['fields']
+        del userData['password']
+        resp = Response({
+                "message": "User registered successfully!",
+                "user_info": userData
+                }, status=status.HTTP_200_OK,
+            )
+        resp['Access-Control-Allow-Origin'] = 'http://localhost:3000'
+        resp['Access-Control-Allow-Credentials'] = 'true'
+        resp.set_cookie('jwtToken', token, httponly=True, secure=True, samesite='None', path='/')
+        return resp
 
     return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
 
@@ -100,7 +106,7 @@ def login(request):
                 token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
                 userData = json.loads(serializers.serialize('json', [user]))[0]['fields']
                 del userData['password']
-                resp = Response({ 
+                resp = Response({
                     "message": "Login successful!",
                     "user_info": userData
                     },

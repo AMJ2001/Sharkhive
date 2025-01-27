@@ -1,10 +1,17 @@
 import './App.css';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { setUserData } from './store';
+
 
 export const Logout = () => {
     const navigate = useNavigate();
+    const dispatch = useDispatch();
+
     const clearSession = () => {
-        navigate('./signup');
+        dispatch(setUserData({}));
+        localStorage.clear();
+        navigate('./');
     };
     return (
         <div className='logoutComp'>

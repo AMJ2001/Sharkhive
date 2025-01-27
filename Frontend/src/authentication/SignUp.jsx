@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import bcrypt from 'bcryptjs';
-import { jwtDecode } from 'jwt-decode';
+import CryptoJS from 'crypto-js';
+import { secretKey } from '../store';
 import { setUserEmail, setUserData } from '../store';
+import { useNavigate } from 'react-router-dom';
 
 const SignUp = () => {
   const [email, setEmail] = useState('');
@@ -13,6 +15,7 @@ const SignUp = () => {
   const [showPasswordFields, setShowPasswordFields] = useState(false);
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   
 
   const handleNameChange = (e) => {
@@ -91,11 +94,17 @@ const SignUp = () => {
         body: JSON.stringify(payload),
       });
       const data = await response.json();
-  
+      console.log(response.status);
       if (response.status === 200) {
-        dispatch(setUserData(jwtDecode(data.access_token)));
+        const user = data.user_info;
+        const payloadString = JSON.stringify({
+            sessionEndTime: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+            userDetails: user
+        });
+        localStorage.setItem('sessionMetaData', CryptoJS.AES.encrypt(payloadString, secretKey).toString());
+        dispatch(setUserData(user));
         setErrorMessage('');
-        navigator('./directories')
+        navigate('./directories')
       } else {
         setErrorMessage(data.message || 'Failed to sign up. Please try again.');
       }
