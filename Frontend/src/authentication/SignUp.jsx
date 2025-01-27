@@ -1,15 +1,27 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import bcrypt from 'bcryptjs';
-import { setUserEmail } from '../store';
+import Cookies from 'js-cookie';
+import { setUserEmail, setUserData } from '../store';
 
 const SignUp = () => {
   const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
+  const [role, setRole] = useState('');
   const [password, setPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [showPasswordFields, setShowPasswordFields] = useState(false);
-  const [loading, setLoading] = useState(false); // Loading state for email verification
+  const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
+  
+
+  const handleNameChange = (e) => {
+    setName(e.target.value);
+  };
+
+  const handleRoleChange = (e) => {
+    setRole(e.target.value);
+  };
 
   // Debounce function to prevent API call on every keystroke
   const debounce = (func, delay) => {
@@ -20,68 +32,76 @@ const SignUp = () => {
     };
   };
 
-  // Email verification API call
   const verifyEmail = async (email) => {
     try {
-      setLoading(true); // Start loading indicator
-      const response = { data: { exists: false } };//await fetch('https://api.example.com/verify-email', { email });
+      setLoading(true);
+      const response = await fetch(`http://127.0.0.1:8000/api/verify-email/?email=${email}`);
+      const data = await response.json();
 
-      if (response.data.exists) {
-        setErrorMessage('Email already exists. Please log in.');
+      if (response.status === 400) {
+        setErrorMessage(data.error);
         setShowPasswordFields(false);
-      } else {
+      } else if (response.status === 200) {
         setErrorMessage('');
         setShowPasswordFields(true);
-        dispatch(setUserEmail(email)); // Save email to Redux store
+        dispatch(setUserEmail(email));
       }
     } catch (error) {
       console.error('Error verifying email:', error);
       setErrorMessage('Something went wrong. Please try again.');
     } finally {
-      setLoading(false); // Stop loading indicator
+      setLoading(false);
     }
   };
 
-  // Create debounced version of the verifyEmail function
-  const debouncedVerifyEmail = debounce(verifyEmail, 500); // 500ms debounce delay
+  const debouncedVerifyEmail = debounce(verifyEmail, 500);
 
-  // Handle email input change and trigger verification when conditions are met
   const handleEmailChange = (e) => {
     const newEmail = e.target.value;
     setEmail(newEmail);
 
-    // Trigger verification only after user finishes typing the email
     if (newEmail.includes('@') && newEmail.endsWith('.com')) {
-      debouncedVerifyEmail(newEmail); // Call the debounced function
+      debouncedVerifyEmail(newEmail);
     }
   };
 
-  // Handle password input change
   const handlePasswordChange = (e) => {
     setPassword(e.target.value);
   };
 
-  const handleSubmit = async () => {
-    // Hash the password using bcrypt
-    const hashedPassword = await bcrypt.hash(password, 10); // 10 is the salt rounds
-
-    // Send the hashed password in the payload (not the raw password)
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const hashedPassword = await bcrypt.hash(password, 10);
     const payload = {
+      action: 'reg',
       email,
-      password: hashedPassword, // Use hashed password instead of plain password
+      username: name,
+      role,
+      password: hashedPassword,
+      mfa_type: 'email',
     };
-
+  
     try {
       setLoading(true);
-      // const response = await fetch('https://api.example.com/verify-email', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify({ email })
-      // });
-      console.log(payload);
+      const response = await fetch('http://127.0.0.1:8000/api/register/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+  
+      if (response.status === 200) {
+        Cookies.set('jwtToken', data.access_token, { httpOnly: true }); // Set JWT token in HTTP-only cookie
+        dispatch(setUserData(data.user)); // Save user data to Redux store
+        setErrorMessage('');
+        navigator('./directories')
+      } else {
+        setErrorMessage(data.message || 'Failed to sign up. Please try again.');
+      }
     } catch (error) {
+      console.error('Error during registration:', error);
       setErrorMessage('Failed to sign up. Please try again.');
     } finally {
       setLoading(false);
@@ -106,23 +126,37 @@ const SignUp = () => {
         </div>
 
         {showPasswordFields && (
-          <div>
-            <input
-              type="password"
-              value={password}
-              onChange={handlePasswordChange}
-              placeholder="Enter password"
-              required
-            />
-            <input
-              type="password"
-              placeholder="Confirm password"
-              required
-            />
-          </div>
+        <div>
+          <input
+            type="password"
+            value={password}
+            onChange={handlePasswordChange}
+            placeholder="Enter password"
+            required
+          />
+          <input
+            type="password"
+            placeholder="Confirm password"
+            required
+          />
+          <input
+            type="text"
+            value={name}
+            onChange={handleNameChange}
+            placeholder="Enter your name"
+            required
+          />
+          <input
+            type="text"
+            value={role}
+            onChange={handleRoleChange}
+            placeholder="Enter your role"
+            required
+          />
+        </div>
         )}
 
-        <button type="submit" disabled={loading} onClick={handleSubmit}>Submit</button>
+        <button type="submit" disabled={loading}>Submit</button>
       </form>
     </div>
   );

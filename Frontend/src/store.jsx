@@ -4,22 +4,24 @@ import { configureStore, createSlice } from '@reduxjs/toolkit';
 const userSlice = createSlice({
   name: 'user',
   initialState: {
-    email: '', // Initial state for email
+    email: '', 
+    userData: {},
   },
   reducers: {
     setUserEmail(state, action) {
-      state.email = action.payload; // Set email when the user provides it
+      state.email = action.payload;
+    },
+    setUserData(state, action) {
+      state.userData = action.payload; //set during reg
     },
   },
 });
 
-// Export actions directly from the slice
-export const { setUserEmail } = userSlice.actions;
+export const { setUserEmail, setUserData } = userSlice.actions;
 
-// Configure the store with just one slice
 const store = configureStore({
   reducer: {
-    user: userSlice.reducer, // Include other reducers here if needed later
+    user: userSlice.reducer,
   },
 });
 

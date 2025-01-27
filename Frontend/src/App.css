@@ -37,6 +37,13 @@
   }
 }
 
+.logoutComp {
+  position: fixed;
+  top: 1vw;
+  right: 2vw;
+  z-index: 1000;
+}
+
 /* Overall Layout */
 .homepage {
   font-family: 'Arial', sans-serif;
