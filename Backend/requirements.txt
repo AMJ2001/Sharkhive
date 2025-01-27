@@ -2,5 +2,6 @@ django
 pyjwt
 pycryptodome
 djangorestframework
+django-cors-headers
 requests
 qrcode

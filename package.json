@@ -1,5 +1,5 @@
 {
   "dependencies": {
-    "js-cookie": "^3.0.5"
+    "crypto-js": "^4.2.0"
   }
 }

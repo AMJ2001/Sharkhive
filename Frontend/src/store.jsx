@@ -26,3 +26,5 @@ const store = configureStore({
 });
 
 export default store;
+
+export const secretKey = 'encrypted123';

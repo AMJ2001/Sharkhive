@@ -2,10 +2,11 @@ from datetime import timedelta
 import re
 
 import jwt
+import json
 import uuid
 from django.conf import settings
 from django.contrib.auth.hashers import make_password, check_password
-from django.core.mail import send_mail
+from django.core import serializers
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -97,9 +98,12 @@ def login(request):
                     "exp": timezone.now() + timedelta(hours = 1),
                 }
                 token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
-
-                resp = Response(
-                    {"message": "Login successful!", "access_token": token},
+                userData = json.loads(serializers.serialize('json', [user]))[0]['fields']
+                del userData['password']
+                resp = Response({ 
+                    "message": "Login successful!",
+                    "user_info": userData
+                    },
                     status=status.HTTP_200_OK,
                 )
                 resp['Access-Control-Allow-Origin'] = 'http://localhost:3000'

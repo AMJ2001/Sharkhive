@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { jwtDecode } from 'jwt-decode';
+import CryptoJS from 'crypto-js';
 import { useNavigate } from 'react-router-dom';
 import { setUserEmail, setUserData } from '../store';
+import { secretKey } from '../store';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -50,7 +51,13 @@ const Login = () => {
 
       if (response.status === 200) {
         if (showMfaField) {
-          dispatch(setUserData(jwtDecode(data.access_token)));
+          const user = data.user_info;
+          const payloadString = JSON.stringify({
+            sessionEndTime: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+            userDetails: user
+          });
+          localStorage.setItem('sessionMetaData', CryptoJS.AES.encrypt(payloadString, secretKey).toString());
+          dispatch(setUserData(user));
           navigate('/directories');
         } else {
           // MFA required

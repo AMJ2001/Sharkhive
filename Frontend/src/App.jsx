@@ -1,11 +1,14 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import './App.css';
 import HomePage from './Home';  
 import SignUp from './authentication/SignUp'; 
-import Login from './authentication/Login'; // Assuming you have a Login component
+import Login from './authentication/Login';
+import { useDispatch } from 'react-redux';
+import { setUserData } from './store';
 import { Logout } from './Logout';
-import logo from './logo.svg';
+import CryptoJS from 'crypto-js';
+import { secretKey } from './store';
 
 function App() {
   return (
@@ -42,26 +45,33 @@ function AppContent() {
 
 function AppRoutes() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  useEffect(() => {
-    // if (token && isTokenValid(token)) {
-    //   navigate('./directories')
-    // }
-  }, [navigate]);
-
-  const isTokenValid = (token) => {
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const expiry = payload.exp * 1000; // Convert to milliseconds
-      return Date.now() < expiry;
-    } catch (e) {
+  const hasActiveSession = useCallback(() => {
+    const encryptedPayload = localStorage.getItem('sessionMetaData');
+    if (!encryptedPayload) {
       return false;
     }
-  };
+
+    const bytes = CryptoJS.AES.decrypt(encryptedPayload, secretKey);
+    const sessionMetaData = JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
+    if (new Date() > new Date (sessionMetaData.sessionEndTime)) {
+      return false;
+    } else {
+      dispatch((setUserData(sessionMetaData.userDetails)));
+      return true;
+    }
+  }, [dispatch]); 
+
+  useEffect(() => {
+    if (hasActiveSession()) {
+      navigate('./directories');
+    }
+  }, [hasActiveSession, navigate]);
 
   return (
     <>
-          {!['/', '/login', '/signup'].includes(window.location.pathname) && <Logout />}
+      {!['/', '/login', '/signup'].includes(window.location.pathname) && <Logout />}
       <Routes>
         <Route path="/directories" element={<HomePage />} /> 
         <Route path="/signup" element={<SignUp />} />
