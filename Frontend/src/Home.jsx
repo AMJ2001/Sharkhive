@@ -32,7 +32,7 @@ const HomePage = () => {
   };
 
   const handleMenuClick = (id) => {
-    setShowMenu(showMenu === id ? null : id); // Toggle menu visibility
+    setShowMenu(showMenu === id ? null : id);
   };
 
   const handleUpload = () => {
@@ -41,14 +41,12 @@ const HomePage = () => {
 
   return (
     <div className="homepage">
-      {/* Header with user info */}
       <header className="header">
         <div className="user-name">
           Welcome {userData.name || userData.email?.trim().split('@')[0].split('.')[0]}
         </div>
       </header>
   
-      {/* Central File Structure */}
       <div className="file-cards-container">
         <h1 className="directory-heading">Directory</h1>
         {fileStructure?.length > 0 ? (
@@ -83,8 +81,8 @@ const HomePage = () => {
                 <span className="menu-icon">•••</span>
                 {showMenu === item.file_name && (
                   <div className="menu-options">
-                    <button>Open</button>
-                    <button>View</button>
+                    <button>Delete</button>
+                    <button>Share</button>
                   </div>
                 )}
               </div>
@@ -95,7 +93,6 @@ const HomePage = () => {
         )}
       </div>
   
-      {/* Upload Button */}
       <div className="upload-btn">
         {userData.role === 'admin' && (<button onClick={handleUpload}>Upload File</button>)}
       </div>

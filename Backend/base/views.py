@@ -1,9 +1,10 @@
 from datetime import timedelta
 import re
 
-import jwt
-import json
 import uuid
+import json
+import jwt
+
 from django.conf import settings
 from django.contrib.auth.hashers import make_password, check_password
 from django.core import serializers
@@ -14,7 +15,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from base.serializers import LoginSerializer
-from base.utils import encrypt_file, generate_random_mfa_code, generate_totp_qr_code, upload_to_nextcloud
+from base.utils import encrypt_file, generate_random_mfa_code, upload_to_nextcloud
 
 from .models import User, File
 from .serializers import UserRegistrationSerializer, FileUploadSerializer
@@ -209,7 +210,6 @@ def upload_file(request):
         file_name = serializer.validated_data['file_name']
         file_type = serializer.validated_data['file_type']
 
-        # Encrypt the file
         encrypted_file_data = encrypt_file(file_data)
 
         try:
@@ -243,9 +243,8 @@ def get_user_files(request):
 
     if not token:
         return Response({"error": "Authorization token missing!"}, status=status.HTTP_400_BAD_REQUEST)
-    
+
     try:
-        # Remove 'Bearer ' part if it's there in the token
         if token.startswith("Bearer "):
             token = token[7:]
 

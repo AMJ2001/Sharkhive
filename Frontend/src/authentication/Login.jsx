@@ -35,7 +35,7 @@ const Login = () => {
       action: 'login',
       email,
       password,
-      ...(showMfaField && { code: mfaCode }), // Include MFA code if it's required
+      ...(showMfaField && { code: mfaCode }),
     };
 
     try {
@@ -60,7 +60,6 @@ const Login = () => {
           dispatch(setUserData(user));
           navigate('/directories');
         } else {
-          // MFA required
           setShowMfaField(true);
           setErrorMessage('');
         }

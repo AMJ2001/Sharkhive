@@ -8,7 +8,7 @@ class UserRegistrationSerializer(serializers.Serializer):
     email = serializers.CharField(required = True)
     username = serializers.CharField(required = True)
     role = serializers.CharField(required = True)
-    password = serializers.CharField(required = True)  # Password will be hashed in the view
+    password = serializers.CharField(required = True)
     mfa_type = serializers.CharField(required = False)
 
 class FileUploadSerializer(serializers.Serializer):

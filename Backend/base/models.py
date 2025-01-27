@@ -44,9 +44,9 @@ class File(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='files')
     file_name = models.CharField(max_length=255)
     file_type = models.CharField(max_length=50)
-    file_size = models.PositiveIntegerField()  # in bytes
+    file_size = models.PositiveIntegerField()
     upload_date = models.DateTimeField(default=timezone.now)
-    file_url = models.URLField()  # Path to the stored file
+    file_url = models.URLField()
 
     objects = models.Manager()
 

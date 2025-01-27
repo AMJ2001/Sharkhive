@@ -1,6 +1,5 @@
 import { configureStore, createSlice } from '@reduxjs/toolkit';
 
-// User slice (state + reducers in one place)
 const userSlice = createSlice({
   name: 'user',
   initialState: {

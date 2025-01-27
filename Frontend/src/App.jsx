@@ -27,7 +27,6 @@ function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Only show the title and buttons on the main page
   if (location.pathname !== '/') {
     return null;
   }
