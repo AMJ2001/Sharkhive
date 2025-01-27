@@ -93,8 +93,8 @@ const SignUp = () => {
       const data = await response.json();
   
       if (response.status === 200) {
-        Cookies.set('jwtToken', data.access_token, { httpOnly: true }); // Set JWT token in HTTP-only cookie
-        dispatch(setUserData(data.user)); // Save user data to Redux store
+        Cookies.set('jwtToken', data.access_token, { httpOnly: true }); // Setting JWT token in HTTP-only cookie
+        dispatch(setUserData(data.user));
         setErrorMessage('');
         navigator('./directories')
       } else {
@@ -120,7 +120,7 @@ const SignUp = () => {
             placeholder="Enter your email"
             required
           />
-          {loading && <span className="loading-icon">...</span>} {/* Loading icon next to the email input */}
+          {loading && <span className="loading-icon">...</span>}
 
           {errorMessage && <div className="error-message">{errorMessage}</div>}
         </div>
