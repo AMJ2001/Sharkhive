@@ -2,21 +2,18 @@ import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import FileUploadPopup from "./FileUploadPopup.tsx";
+import ShareLinkPopup from "./ShareLinkPopup.tsx";
 
 const HomePage = () => {
   const [showMenu, setShowMenu] = useState(null);
-  const [showPopup, setShowPopup] = useState(false);
+  const [showUploadPopup, setShowUploadPopup] = useState(false);
+  const [showSharePopup, setShowSharePopup] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+
   const [fileStructure, setFileStructure] = useState([]);
   const userData = useSelector((state) => state.user.userData);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!userData || Object.keys(userData).length === 0) {
-      navigate("/login");
-    } else {
-      fetchFileStructure();
-    }
-  }, [userData, navigate]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const fetchFileStructure = async () => {
     try {
@@ -30,6 +27,28 @@ const HomePage = () => {
       console.error("Error fetching file structure:", error);
     }
   };
+
+  useEffect(() => {
+    if (userData && Object.keys(userData).length > 0) {
+      fetchFileStructure();
+      setIsLoading(false);
+    } else if (!userData || Object.keys(userData).length === 0) {
+      setIsLoading(false);
+    }
+  }, [userData]);
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!userData || Object.keys(userData).length === 0) {
+        navigate("/login");
+      }
+    }
+  }, [isLoading, userData, navigate]);
+
+  if (isLoading) {
+    return <div className="directory-heading">Please login.</div>;
+  }
+
   
   const encryptFile = async (file) => {
     const key = await window.crypto.subtle.generateKey({
@@ -55,7 +74,7 @@ const HomePage = () => {
   };
 
   const handleUpload = () => {
-    setShowPopup(true);
+    setShowUploadPopup(true);
   };
   
   const handleFileUpload = async (destination) => {
@@ -84,6 +103,7 @@ const HomePage = () => {
           if (response.ok) {
             const data = await response.json();
             alert(`File uploaded successfully: ${data.file_url}`);
+            window.location.reload();
           } else {
             const errorData = await response.json();
             alert(`Failed to upload file: ${errorData.error}`);
@@ -97,12 +117,20 @@ const HomePage = () => {
     input.click();
   };
 
+  const handleShare = (file) => {
+    setSelectedFile(file);
+    setShowSharePopup(true);
+  };
+
   return (
     <div className="homepage">
       <header className="header">
         <div className="user-name">
           Welcome {userData.name || userData.email?.trim().split('@')[0].split('.')[0]}
         </div>
+        {userData.role === 'admin' && (
+          <button className="activity-redirect" onClick={() => navigate('/activities')}> Activity Tracking </button>
+        )}
       </header>
   
       <div className="file-cards-container">
@@ -139,8 +167,8 @@ const HomePage = () => {
                 <span className="menu-icon">•••</span>
                 {showMenu === item.file_name && (
                   <div className="menu-options">
-                    <button>Delete</button>
-                    <button>Share</button>
+                    {/* <button>Edit</button> */}
+                    <button onClick={() => handleShare(item)}>Share</button>
                   </div>
                 )}
               </div>
@@ -149,16 +177,24 @@ const HomePage = () => {
         ) : (
           <div className="no-files">No files available</div>
         )}
+
+        {showSharePopup && (
+        <ShareLinkPopup
+          file={selectedFile}
+          onClose={() => setShowSharePopup(false)}
+          onLinkGenerated={(link) => console.log("Generated Link:", link)}
+        />
+      )}
       </div>
         
       <div className="upload-btn">
           {["admin", "standard"].includes(userData.role) && (
             <button onClick={handleUpload}>Upload File</button>
           )}
-          {showPopup && (
+          {showUploadPopup && (
             <FileUploadPopup
-            onClose={() => setShowPopup(false)}
-            onFileUpload={(destination) => handleFileUpload(destination)} // Pass destination to handleFileUpload
+              onClose={() => setShowUploadPopup(false)}
+              onFileUpload={(destination) => handleFileUpload(destination)}
             />
           )}
         </div>

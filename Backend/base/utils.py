@@ -1,14 +1,17 @@
+from datetime import timedelta
 import random
+import hashlib
 import pyotp
 
 # from twilio.rest import Client
 import qrcode
 import requests
-import hashlib
 
+from django.utils import timezone
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
 from secure_file_service import settings
+from .models import TemporaryFileLink
 
 def generate_totp_qr_code(totp_key):
     totp = pyotp.TOTP(totp_key)
@@ -34,11 +37,21 @@ def verify_totp_mfa_code(user, entered_code):
         return True #jwt can be generated now
     return False
 
-def encrypt_file(file_data):
-    cipher = AES.new(hashlib.sha256(settings.SECRET_KEY.encode()).digest(), AES.MODE_CBC)
-    ciphertext = cipher.encrypt(pad(file_data, AES.block_size))
+def generate_shareable_link(file, email=None, expiration_minutes=60):
+    """
+    Create the temporary link record
+    """
+    expiration_time = timezone.now() + timedelta(minutes=expiration_minutes)
 
-    return cipher.iv + ciphertext
+    temp_link = TemporaryFileLink.objects.create(
+        file=file,
+        expiration_time=expiration_time,
+        shared_with_email=email
+    )
+
+    shareable_link = f"http://localhost:8000/api/download/{temp_link.token}"
+
+    return shareable_link
 
 def upload_to_nextcloud(file_name, file_data):
     """

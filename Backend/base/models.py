@@ -1,3 +1,4 @@
+import uuid
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db import models
 from django.utils import timezone
@@ -21,7 +22,7 @@ class User(AbstractBaseUser):
     """
     Data of each user
     """
-    id = models.CharField(max_length=50, primary_key=True, unique=True) 
+    id = models.CharField(max_length=50, primary_key=True, unique=True)
     username = models.CharField(max_length=50, unique=True, null=False)
     email = models.EmailField(max_length=80, unique=True, null=False)
     password = models.CharField(max_length=255, null=False)
@@ -73,4 +74,29 @@ class FilePermission(models.Model):
         try:
             return f"{self.user.username} - {self.permission_type} - {self.file.file_name}"
         except AttributeError:
-            return f"Permission: {self.permission_type} - File: {self.file}"    
+            return f"Permission: {self.permission_type} - File: {self.file}"
+      
+class TemporaryFileLink(models.Model):
+    """
+    Store mapping of files to shared links
+    """
+    file_name = models.CharField(max_length=255)
+    token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    expiration_time = models.DateTimeField()
+    generated_by = models.CharField(default='_id_', max_length=50)
+    shared_with_email = models.EmailField(null=True, blank=True)  # Optional email
+
+    objects = models.Manager()
+    
+    def is_expired(self):
+        """
+        Returns true if link has expired
+        """
+        return timezone.now() > self.expiration_time
+
+    def __str__(self):
+        try:
+            return f"Temporary link for {self.file.file_name} - Expires on {self.expiration_time}"
+        except AttributeError:
+            return f"Temporary link for {self.shared_with_email} - Expires on {self.expiration_time}"
+  

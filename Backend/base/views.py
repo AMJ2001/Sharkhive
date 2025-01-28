@@ -19,7 +19,7 @@ from rest_framework import status
 from base.serializers import LoginSerializer
 from base.utils import generate_random_mfa_code, upload_to_nextcloud
 
-from .models import User, File
+from .models import User, File, TemporaryFileLink
 from .serializers import UserRegistrationSerializer, FileUploadSerializer
 
 User = get_user_model()
@@ -309,31 +309,86 @@ def get_user_files(request):
         return Response({"error": "Invalid token!"}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
-def download_file(request, file_name):
+def download_file(request, file_identifier):
     """
-    Download file stored in server fs
+    Download the file in a user's directory or valid shared link
     """
     try:
+        token = request.COOKIES.get('jwtToken')[2:-1] or request.COOKIES.get('jwt')
+
+        if not token:
+            return Response({"error": "Authorization token missing"}, status=status.HTTP_400_BAD_REQUEST)
+
+        decoded_token = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+
+        user = User.objects.get(id=decoded_token.get('id'))
+        file_obj = File.objects.filter(file_name=file_identifier, user=user).first()
+
+        if file_obj:
+            file_path = os.path.join(settings.MEDIA_ROOT, "uploads", file_obj.file_name)
+            print(file_path)
+            if not os.path.exists(file_path):
+                return Response({"error": "File not found"}, status=status.HTTP_404_NOT_FOUND)
+
+            response = FileResponse(open(file_path, 'rb'), as_attachment=True, filename=file_obj.file_name)
+            return response
+
+        temp_link = TemporaryFileLink.objects.filter(token=file_identifier).first()
+        file_obj = File.objects.filter(file_name=temp_link.file_name).first()
+
+        if temp_link and (temp_link.generated_by is decoded_token.get('id') or not temp_link.is_expired()):
+            file_path = os.path.join(settings.MEDIA_ROOT, "uploads", file_obj.file_name)
+
+            if not os.path.exists(file_path):
+                return Response({"error": "File not found"}, status=status.HTTP_404_NOT_FOUND)
+
+            response = FileResponse(open(file_path, 'rb'), as_attachment=True, filename=file_obj.file_name)
+            return response
+
+        return Response({"error": "File not found or link invalid."}, status=status.HTTP_404_NOT_FOUND)
+
+    except jwt.ExpiredSignatureError:
+        return Response({"error": "Token has expired"}, status=status.HTTP_401_UNAUTHORIZED)
+
+@api_view(['POST'])
+def generate_shareable_link(request):
+    try:
+        data = request.data
+        name = data.get('name')
+        expiration_minutes = data.get('expiration_minutes')
+        email = data.get('email', None)
+
+        if not name or not expiration_minutes:
+            return Response({"error": "file_name and expiration_minutes are required!"}, status=status.HTTP_400_BAD_REQUEST)
+
         token = request.COOKIES.get('jwtToken')[2:-1] or request.COOKIES.get('jwt')
 
         if not token:
             return Response({"error": "Authorization token missing!"}, status=status.HTTP_400_BAD_REQUEST)
 
         decoded_token = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
-        user = User.objects.get(id=decoded_token.get('id'))
-
-        file_obj = File.objects.get(file_name=file_name, user=user)
-
-        if file_obj.file_url.startswith(NEXTCLOUD_BASE_URL):
-            return Response(status=status.HTTP_204_NO_CONTENT)
-
-        file_path = os.path.join(settings.MEDIA_ROOT, "uploads", file_obj.file_name)
-
-        if not os.path.exists(file_path) or file_obj is None:
-            return Response({"error": "File not found"}, status=status.HTTP_404_NOT_FOUND)
-
-        response = FileResponse(open(file_path, 'rb'), as_attachment=True, filename=file_obj.file_name)
-        return response
         
+        user = User.objects.get(id=decoded_token.get('id'))
+        file_obj = File.objects.filter(file_name=name, user=user).first()
+
+        if not file_obj:
+            return Response({"error": "File not found or not authorized!"}, status=status.HTTP_404_NOT_FOUND)
+
+        unique_token = uuid.uuid4()
+        expiration_time = timezone.now() + timedelta(minutes=expiration_minutes)
+
+        TemporaryFileLink.objects.create(
+            file_name=file_obj.file_name,
+            token=unique_token,
+            expiration_time=expiration_time,
+            generated_by=decoded_token.get('id'),
+            shared_with_email=email
+        )
+
+        shareable_url = f"http://localhost:8000/api/download/{unique_token}"
+        return Response({"shareable_link": shareable_url}, status=status.HTTP_201_CREATED)
+
     except jwt.ExpiredSignatureError:
-            return Response({"error": "Token has expired!"}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response({"error": "Token has expired!"}, status=status.HTTP_401_UNAUTHORIZED)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)    
