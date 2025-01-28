@@ -1,8 +1,10 @@
 from datetime import timedelta
+import os
 import re
 
 import uuid
 import json
+from django.http import FileResponse
 import jwt
 
 from django.conf import settings
@@ -15,12 +17,13 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from base.serializers import LoginSerializer
-from base.utils import encrypt_file, generate_random_mfa_code, upload_to_nextcloud
+from base.utils import generate_random_mfa_code, upload_to_nextcloud
 
 from .models import User, File
 from .serializers import UserRegistrationSerializer, FileUploadSerializer
 
 User = get_user_model()
+NEXTCLOUD_BASE_URL = "https://oto.lv.tab.digital"
 mfa_codes = {}
 
 @api_view(["POST"])
@@ -102,6 +105,7 @@ def login(request):
                 payload = {
                     "id": user.id,
                     "email": user.email,
+                    "role": user.role,
                     "exp": timezone.now() + timedelta(hours = 1),
                 }
                 token = jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
@@ -188,58 +192,82 @@ def upload_file(request):
     """
     Endpoint to upload an encrypted file to Nextcloud
     """
-    token = request.headers.get('Authorization')
+    token = request.COOKIES.get('jwtToken')[2:-1] or request.COOKIES.get('jwt')
     if not token:
         return Response({"error": "Authorization token missing!"}, status=status.HTTP_400_BAD_REQUEST)
 
     if token.startswith("Bearer "):
         token = token[7:]
 
-    decoded_token = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
-    role = "role" in decoded_token and decoded_token.get('role')
+    try:
+        decoded_token = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+        role = decoded_token.get('role')
+    except jwt.ExpiredSignatureError:
+        return Response({"error": "Token has expired!"}, status=status.HTTP_401_UNAUTHORIZED)
+    except jwt.DecodeError:
+        return Response({"error": "Invalid token!"}, status=status.HTTP_400_BAD_REQUEST)
 
-    if ((not role) or (role is not 'admin')):
+    if not role or role not in ['admin', 'standard']:
         return Response({"error": "Not allowed to upload files"}, status=status.HTTP_401_UNAUTHORIZED)
 
     serializer = FileUploadSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    if serializer.is_valid():
-        file = request.FILES['file']
-        file_data = file.read()
-        file_size = file.size
-        file_name = serializer.validated_data['file_name']
-        file_type = serializer.validated_data['file_type']
+    file = request.FILES['file']
+    file_data = file.read()
+    file_size = file.size
+    file_name = serializer.validated_data['file_name']
+    file_type = serializer.validated_data['file_type']
 
-        encrypted_file_data = encrypt_file(file_data)
+    upload_destination = request.data.get("destination", "Sharkhive")
 
-        try:
-            # Upload the encrypted file to Nextcloud
-            file_url = upload_to_nextcloud(file_name, encrypted_file_data)
+    try:
+        if upload_destination == "NextCloud":
+            file_url = upload_to_nextcloud(file_name, file_data)
 
             File.objects.create(
-                user=User.objects.get(email='john.doe@example.com'),
+                user=User.objects.get(email=decoded_token.get('email')),
                 file_name=file_name,
                 file_type=file_type,
                 file_url=file_url,
                 file_size=file_size
             )
-
             return Response({
-                "message": "File uploaded successfully",
+                "message": "File uploaded to NextCloud successfully",
                 "file_url": file_url
-            }, status=201)
+            }, status=status.HTTP_201_CREATED)
 
-        except Exception as e:
-            return Response({"error": str(e)}, status=500)
+        elif upload_destination == "Sharkhive":
+            # Save the encrypted file to the backend file system
+            save_path = os.path.join(settings.MEDIA_ROOT, "uploads", file_name)
+            os.makedirs(os.path.dirname(save_path), exist_ok=True)
+            with open(save_path, "wb") as f:
+                f.write(file_data)
 
-    return Response(serializer.errors, status=400)
+            File.objects.create(
+                user=User.objects.get(email=decoded_token.get('email')),
+                file_name=file_name,
+                file_type=file_type,
+                file_url=save_path,
+                file_size=file_size
+            )
+            return Response({
+                "message": "File uploaded to Sharkhive successfully",
+                "file_url": save_path
+            }, status=status.HTTP_201_CREATED)
+        else:
+            return Response({"error": "Invalid upload destination"}, status=status.HTTP_400_BAD_REQUEST)
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
 def get_user_files(request):
     """
     List of all the files and their metadata for a particular user
     """
-    token = request.COOKIES.get('jwtToken')[2:-1]
+    token = request.COOKIES.get('jwtToken')[2:-1] or request.COOKIES.get('jwt')
 
     if not token:
         return Response({"error": "Authorization token missing!"}, status=status.HTTP_400_BAD_REQUEST)
@@ -255,7 +283,6 @@ def get_user_files(request):
             return Response({"error": "Invalid token!"}, status=status.HTTP_400_BAD_REQUEST)
 
         user = get_object_or_404(get_user_model(), email=email)
-
         files = File.objects.filter(user=user)
 
         file_data = [
@@ -264,7 +291,12 @@ def get_user_files(request):
                 'file_type': file.file_type,
                 'file_size': file.file_size,
                 'upload_date': file.upload_date,
-                'file_url': file.file_url
+                'file_url': (
+                    file.file_url
+                    if file.file_url.startswith(NEXTCLOUD_BASE_URL)
+                    else f"http://localhost:8000/api/download/{file.file_name}"
+                ),
+                'next_cloud': file.file_url.startswith(NEXTCLOUD_BASE_URL)
             }
             for file in files
         ]
@@ -275,3 +307,33 @@ def get_user_files(request):
         return Response({"error": "Token has expired!"}, status=status.HTTP_401_UNAUTHORIZED)
     except jwt.DecodeError:
         return Response({"error": "Invalid token!"}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+def download_file(request, file_name):
+    """
+    Download file stored in server fs
+    """
+    try:
+        token = request.COOKIES.get('jwtToken')[2:-1] or request.COOKIES.get('jwt')
+
+        if not token:
+            return Response({"error": "Authorization token missing!"}, status=status.HTTP_400_BAD_REQUEST)
+
+        decoded_token = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+        user = User.objects.get(id=decoded_token.get('id'))
+
+        file_obj = File.objects.get(file_name=file_name, user=user)
+
+        if file_obj.file_url.startswith(NEXTCLOUD_BASE_URL):
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        file_path = os.path.join(settings.MEDIA_ROOT, "uploads", file_obj.file_name)
+
+        if not os.path.exists(file_path) or file_obj is None:
+            return Response({"error": "File not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        response = FileResponse(open(file_path, 'rb'), as_attachment=True, filename=file_obj.file_name)
+        return response
+        
+    except jwt.ExpiredSignatureError:
+            return Response({"error": "Token has expired!"}, status=status.HTTP_401_UNAUTHORIZED)

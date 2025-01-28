@@ -44,9 +44,9 @@ def upload_to_nextcloud(file_name, file_data):
     """
     Upload the file to Nextcloud via WebDAV and return the public URL
     """
-    nextcloud_base_url = settings.NEXTCLOUD_BASE_URL  # Base URL for Nextcloud
-    username = settings.NEXTCLOUD_USERNAME  # Nextcloud username
-    password = settings.NEXTCLOUD_PASSWORD  # Nextcloud password
+    nextcloud_base_url = settings.NEXTCLOUD_BASE_URL
+    username = settings.NEXTCLOUD_USERNAME
+    password = settings.NEXTCLOUD_PASSWORD
 
     upload_path = f"/remote.php/dav/files/{username}/{file_name}"
     full_url = nextcloud_base_url + upload_path

@@ -1,4 +1,3 @@
-import './App.css';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { setUserData } from './store';
