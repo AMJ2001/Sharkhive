@@ -1,0 +1,10 @@
+django
+pyjwt
+pycryptodome
+djangorestframework
+django-cors-headers
+django-extensions
+requests
+pyOpenSSL
+werkzeug
+qrcode

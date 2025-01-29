@@ -1,4 +1,0 @@
-django
-pyjwt
-djangorestframework
-qrcode
