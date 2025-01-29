@@ -13,27 +13,22 @@
 
 ## To run
 
-1. 
 ```bash 
 git clone https://github.com/AMJ2001/Sharkhive.git #clone this repository
 ```
 
-2. 
 ```bash 
 cd secure-file-share #go to the main project folder.
 ```
 
-3. 
 ```bash 
 mkcert --install mkcert localhost #generate certificate and key (pem files) for running https
 ```
 
-4. 
 ```bash 
 docker-compose up --build
 ```
 
-<h6>
 In an unlikely case of a build failure, please try the following:<br>
   -> Generating new pem files again  <br>
   -> cd Frontend  <br>
