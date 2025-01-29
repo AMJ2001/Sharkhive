@@ -11,6 +11,7 @@ const Login = () => {
   const [mfaCode, setMfaCode] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [showMfaField, setShowMfaField] = useState(false);
+  const [imageSrc, setImageSrc] = useState(null);
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -49,7 +50,11 @@ const Login = () => {
       });
       const data = await response.json();
 
-      if (response.status === 200) {
+      if (response.status === 200 || response.ok) {
+        const contentType = response.headers.get('content-type')
+        if (contentType && contentType.includes('image')) {
+          setImageSrc(`data:${contentType};base64,${data}`);
+        }
         if (showMfaField) {
           const user = data.user_info;
           const payloadString = JSON.stringify({
@@ -67,7 +72,6 @@ const Login = () => {
         setErrorMessage(data.message || 'Failed to log in. Please try again.');
       }
     } catch (error) {
-      console.error('Error during login:', error);
       setErrorMessage('Failed to log in. Please try again.');
     } finally {
       setLoading(false);
@@ -107,6 +111,10 @@ const Login = () => {
             />
           </div>
         )}
+        <div className="qr-container">
+          {imageSrc ? <img src={imageSrc} alt="QR Code" className="qr-image" /> : null}
+          <p className="qr-text">Scan the QR to get MFA code.</p>
+        </div>
         {errorMessage && <div className="error-message">{errorMessage}</div>}
         <button type="submit" disabled={loading}>
           {showMfaField ? 'Verify MFA' : 'Login'}

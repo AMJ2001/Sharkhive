@@ -119,6 +119,23 @@ button:focus {
   padding-right: 85vw;
 }
 
+.qr-container {
+  align-items: center;
+  justify-content: center;
+}
+
+.qr-image {
+  max-width: 200px; 
+  max-height: 200px;
+  margin-bottom: 10px; 
+}
+
+.qr-text {
+  color: white;
+  font-size: 16px;
+  text-align: center;
+}
+
 /* Overall Layout */
 .homepage {
   font-family: 'Arial', sans-serif;

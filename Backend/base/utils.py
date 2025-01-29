@@ -1,10 +1,13 @@
 from datetime import timedelta
+from io import BytesIO
 import random
-import hashlib
+from io import BytesIO
+import base64
 import pyotp
 
 # from twilio.rest import Client
 import qrcode
+import qrcode.constants
 import requests
 
 from django.utils import timezone
@@ -12,6 +15,38 @@ from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
 from secure_file_service import settings
 from .models import TemporaryFileLink
+from django.core.mail import send_mail
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
+def send_mfa_code(email, mfa_code):
+    subject = "Login to Sharkhive"
+    message = f"Your MFA code is {mfa_code}"
+    from_email = settings.DEFAULT_FROM_EMAIL
+    recipient_list = ["amjsa103@gmail.com"]
+
+    send_mail(subject, message, from_email, recipient_list)
+    print(f"Email sent successfully to {email}")
+
+
+
+def send_qr(code):
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4
+    )
+    qr.add_data(code)
+    qr.make(fit=True)
+
+    img = qr.make_image(fill="black", back_color="white")
+    buffer = BytesIO()
+    img.save(buffer, format="PNG")
+    img_str = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    buffer.close()
+    return img_str
+
 
 def generate_totp_qr_code(totp_key):
     totp = pyotp.TOTP(totp_key)

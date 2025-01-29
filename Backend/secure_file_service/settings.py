@@ -2,8 +2,6 @@
 Django settings for secure_file_service project.
 
 """
-
-import datetime
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -21,6 +19,14 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
+# SECURE_SSL_REDIRECT = True
+# SECURE_HSTS_SECONDS = 3600
+# SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+# SECURE_HSTS_PRELOAD = True
+# SECURE_BROWSER_XSS_FILTER = True
+# SECURE_CONTENT_TYPE_NOSNIFF = True
+# CSRF_COOKIE_SECURE = True
+# SESSION_COOKIE_SECURE = True
 
 # Application definition
 AUTH_USER_MODEL = 'base.User'
@@ -36,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_extensions',
     'corsheaders',
     'base',
     'rest_framework',
@@ -107,6 +114,13 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+EMAIL_BACKEND = "anymail.backends.postmark.EmailBackend"
+ANYMAIL = {
+    "POSTMARK_SERVER_TOKEN": "4ecf054b-d196-436f-9b0c-c92295391860",
+    #"POSTMARK_API_URL": "https://api.postmark.app/sandbox"
+}
+DEFAULT_FROM_EMAIL = "aayush.mishra@u-next.com"
 
 NEXTCLOUD_BASE_URL = "https://oto.lv.tab.digital"
 NEXTCLOUD_USERNAME = "aayush.mishra@u-next.com"

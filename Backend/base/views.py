@@ -17,7 +17,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from base.serializers import LoginSerializer
-from base.utils import generate_random_mfa_code, upload_to_nextcloud
+from base.utils import generate_random_mfa_code, send_mfa_code, upload_to_nextcloud, send_qr
 
 from .models import User, File, TemporaryFileLink
 from .serializers import UserRegistrationSerializer, FileUploadSerializer
@@ -146,6 +146,11 @@ def login(request):
                 #     )
             mfa_codes[email] = generate_random_mfa_code()
             print(f"Hi, Please use this code to log in {mfa_codes[email]}")
+            try:
+                send_mfa_code(email, mfa_codes[email])
+            except:
+                img_str = send_qr(mfa_codes[email])
+                return Response(img_str, 200, content_type="image/png")
             # send_mail(
             #     subject='Subject Here',
             #     message=f"Hi, Please use this code to log in {mfa_codes[email]}",
@@ -326,7 +331,7 @@ def download_file(request, file_identifier):
 
         if file_obj:
             file_path = os.path.join(settings.MEDIA_ROOT, "uploads", file_obj.file_name)
-            print(file_path)
+
             if not os.path.exists(file_path):
                 return Response({"error": "File not found"}, status=status.HTTP_404_NOT_FOUND)
 
