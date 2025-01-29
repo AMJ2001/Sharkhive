@@ -16,11 +16,11 @@ from django.utils import timezone
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from base.serializers import LoginSerializer
+from base.models import TemporaryFileLink
 from base.utils import generate_random_mfa_code, send_mfa_code, upload_to_nextcloud, send_qr
 
 from .models import User, File, TemporaryFileLink
-from .serializers import UserRegistrationSerializer, FileUploadSerializer
+from .serializers import LoginSerializer, UserRegistrationSerializer, FileUploadSerializer
 
 User = get_user_model()
 NEXTCLOUD_BASE_URL = "https://oto.lv.tab.digital"
@@ -57,7 +57,8 @@ def register(request):
         mfa_type = serializer.validated_data["mfa_type"]
 
         hashed_password = make_password(password)
-
+        print(password)
+        print(hashed_password)
         user = User.objects.create(
             id = uuid.uuid4().hex[:6],
             username = username,
@@ -123,9 +124,11 @@ def login(request):
                 return resp
             else:
                 return Response({"error": "Invalid code"}, status = status.HTTP_400_BAD_REQUEST)
-
+        print(password)
+        print(user.password)
+        user = User.objects.get(email=email)
         valid = check_password(password, user.password)
-
+        print(valid)
         if valid:
                 # if user.mfa_type == "SMS":
                 #     mfa_code = generate_random_mfa_code()
@@ -200,6 +203,7 @@ def upload_file(request):
     try:
         decoded_token = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
         role = decoded_token.get('role')
+        print("fine3")
     except jwt.ExpiredSignatureError:
         return Response({"error": "Token has expired!"}, status=status.HTTP_401_UNAUTHORIZED)
     except jwt.DecodeError:
@@ -217,7 +221,7 @@ def upload_file(request):
     file_size = file.size
     file_name = serializer.validated_data['file_name']
     file_type = serializer.validated_data['file_type']
-
+    print("fine")
     upload_destination = request.data.get("destination", "Sharkhive")
 
     try:
@@ -242,7 +246,7 @@ def upload_file(request):
             os.makedirs(os.path.dirname(save_path), exist_ok=True)
             with open(save_path, "wb") as f:
                 f.write(file_data)
-
+            print("fineyea")
             File.objects.create(
                 user=User.objects.get(email=decoded_token.get('email')),
                 file_name=file_name,
@@ -250,6 +254,7 @@ def upload_file(request):
                 file_url=save_path,
                 file_size=file_size
             )
+            print("fineyea2")
             return Response({
                 "message": "File uploaded to Sharkhive successfully",
                 "file_url": save_path
@@ -292,7 +297,7 @@ def get_user_files(request):
                 'file_url': (
                     file.file_url
                     if file.file_url.startswith(NEXTCLOUD_BASE_URL)
-                    else f"http://localhost:8000/api/download/{file.file_name}"
+                    else f"https://localhost:8000/api/download/{file.file_name}"
                 ),
                 'next_cloud': file.file_url.startswith(NEXTCLOUD_BASE_URL)
             }
@@ -383,10 +388,16 @@ def generate_shareable_link(request):
             shared_with_email=email
         )
 
-        shareable_url = f"http://localhost:8000/api/download/{unique_token}"
+        shareable_url = f"https://localhost:8000/api/download/{unique_token}"
         return Response({"shareable_link": shareable_url}, status=status.HTTP_201_CREATED)
 
     except jwt.ExpiredSignatureError:
         return Response({"error": "Token has expired!"}, status=status.HTTP_401_UNAUTHORIZED)
     except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)    
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+def logout(req):
+    resp = Response({"Logout successful"}, status=200)
+    resp.set_cookie('jwtToken', '', httponly=True, secure=True, samesite='None', path='/')
+    return resp

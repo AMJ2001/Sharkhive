@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import '.'
+import '../src'
 
 const FileUploadPopup = ({ onClose, onFileUpload }) => {
   const [file, setFile] = useState(null);

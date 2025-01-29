@@ -112,8 +112,13 @@ const Login = () => {
           </div>
         )}
         <div className="qr-container">
-          {imageSrc ? <img src={imageSrc} alt="QR Code" className="qr-image" /> : null}
-          <p className="qr-text">Scan the QR to get MFA code.</p>
+          {imageSrc ? (
+            <div>
+              <img src={imageSrc} alt="QR Code" className="qr-image" /> 
+              <p className="qr-text">Scan the QR to get MFA code.</p>
+            </div>
+          ) : null}
+          
         </div>
         {errorMessage && <div className="error-message">{errorMessage}</div>}
         <button type="submit" disabled={loading}>

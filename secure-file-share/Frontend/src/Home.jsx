@@ -22,8 +22,12 @@ const HomePage = () => {
         credentials: "include",
       });
       const data = await response.json();
+      if (response.status === 401 || ((response.status === 400) && data.error?.includes('Authorization token'))) {
+        navigate('/login');
+      }
       setFileStructure(data);
     } catch (error) {
+      console.log(error, error.message);
       console.error("Error fetching file structure:", error);
     }
   };
@@ -138,7 +142,7 @@ const HomePage = () => {
         {fileStructure?.length > 0 ? (
           fileStructure.map((item) => (
             <div className="file-card" key={item.file_name}>
-              {/* Random Logo */}
+
               <div className="file-card-logo">
                 <img src="/fileIcon.png" alt="File Logo" className="file-logo" />
               </div>
@@ -167,7 +171,6 @@ const HomePage = () => {
                 <span className="menu-icon">•••</span>
                 {showMenu === item.file_name && (
                   <div className="menu-options">
-                    {/* <button>Edit</button> */}
                     <button onClick={() => handleShare(item)}>Share</button>
                   </div>
                 )}

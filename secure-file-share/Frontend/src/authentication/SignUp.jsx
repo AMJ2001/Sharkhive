@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import bcrypt from 'bcryptjs';
 import CryptoJS from 'crypto-js';
 import { secretKey } from '../store';
 import { setUserEmail, setUserData } from '../store';
@@ -11,12 +10,14 @@ const SignUp = () => {
   const [name, setName] = useState('');
   const [role, setRole] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [showPasswordFields, setShowPasswordFields] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [confirmPasswordError, setConfirmPasswordError] = useState('');
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  
 
   const handleNameChange = (e) => {
     setName(e.target.value);
@@ -26,7 +27,6 @@ const SignUp = () => {
     setRole(e.target.value);
   };
 
-  // Debounce function to prevent API call on every keystroke
   const debounce = (func, delay) => {
     let timeoutId;
     return (...args) => {
@@ -70,23 +70,48 @@ const SignUp = () => {
 
   const handlePasswordChange = (e) => {
     setPassword(e.target.value);
+    validatePassword(e.target.value);
+  };
+
+  const handleConfirmPasswordChange = (e) => {
+    setConfirmPassword(e.target.value);
+    validateConfirmPassword(e.target.value);
+  };
+
+  const validatePassword = (password) => {
+    const regex = /^(?=.*[A-Z])(?=.*\d).+$/;
+    if (password.length < 6) {
+      setPasswordError('Password must be at least six characters long');
+    } else if (!regex.test(password)) {
+      setPasswordError('Password must have at least one capital letter and one number');
+    } else {
+      setPasswordError('');
+    }
+  };
+
+  const validateConfirmPassword = (confirmPassword) => {
+    if (confirmPassword !== password && password !== '') {
+      setConfirmPasswordError('Passwords do not match');
+    } else {
+      setConfirmPasswordError('');
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const hashedPassword = await bcrypt.hash(password, 10);
+
     const payload = {
       action: 'reg',
       email,
       username: name,
       role,
-      password: hashedPassword,
+      password: password,
       mfa_type: 'email',
     };
-  
+
     try {
       setLoading(true);
-      const response = await fetch('http://127.0.0.1:8000/api/register/', {
+      const response = await fetch('https://localhost:8000/api/register/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -104,7 +129,7 @@ const SignUp = () => {
         localStorage.setItem('sessionMetaData', CryptoJS.AES.encrypt(payloadString, secretKey).toString());
         dispatch(setUserData(user));
         setErrorMessage('');
-        navigate('./directories')
+        navigate('/directories');
       } else {
         setErrorMessage(data.message || 'Failed to sign up. Please try again.');
       }
@@ -142,11 +167,17 @@ const SignUp = () => {
             placeholder="Enter password"
             required
           />
+          {passwordError && <div className="error-message">{passwordError}</div>}
+
           <input
             type="password"
+            value={confirmPassword}
+            onChange={handleConfirmPasswordChange}
             placeholder="Confirm password"
             required
           />
+          {confirmPasswordError && <div className="error-message">{confirmPasswordError}</div>}
+
           <input
             type="text"
             value={name}
@@ -164,7 +195,7 @@ const SignUp = () => {
         </div>
         )}
 
-        <button type="submit" disabled={loading}>Submit</button>
+        <button type="submit" disabled={loading || passwordError || confirmPasswordError}>Submit</button>
       </form>
     </div>
   );
