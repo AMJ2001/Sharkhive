@@ -58,7 +58,7 @@ const ShareLinkPopup = ({ file, onClose, onLinkGenerated }) => {
             <input
               type="number"
               value={expiryTime}
-              onChange={(e) => setExpiryTime(e.target.value)}
+              onChange={(e) => setExpiryTime(Number(e.target.value))}
               min="1"
             />
           </div>

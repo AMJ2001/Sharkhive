@@ -38,7 +38,7 @@ const SignUp = () => {
   const verifyEmail = async (email) => {
     try {
       setLoading(true);
-      const response = await fetch(`http://127.0.0.1:8000/api/verify-email/?email=${email}`);
+      const response = await fetch(`https://localhost:8000/api/verify-email/?email=${email}`);
       const data = await response.json();
 
       if (response.status === 400) {

@@ -17,7 +17,7 @@ const HomePage = () => {
 
   const fetchFileStructure = async () => {
     try {
-      const response = await fetch("http://localhost:8000/api/files/", {
+      const response = await fetch("https://localhost:8000/api/files/", {
         method: "GET",
         credentials: "include",
       });
@@ -94,7 +94,7 @@ const HomePage = () => {
           formData.append("file_type", file.type);
           formData.append("destination", destination);
   
-          const response = await fetch("http://localhost:8000/api/upload/", {
+          const response = await fetch("https://localhost:8000/api/upload/", {
             method: "POST",
             credentials: "include",
             body: formData,

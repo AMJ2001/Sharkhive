@@ -151,13 +151,6 @@ def login(request):
             except:
                 img_str = send_qr(mfa_codes[email])
                 return Response(img_str, 200, content_type="image/png")
-            # send_mail(
-            #     subject='Subject Here',
-            #     message=f"Hi, Please use this code to log in {mfa_codes[email]}",
-            #     from_email='sharkhive@secure.com',
-            #     recipient_list=['user@client.com'],
-            #     fail_silently=False,
-            # )
             resp = Response({"success": "A code has been sent to your email"}, status = status.HTTP_200_OK)
             resp['Access-Control-Allow-Origin'] = 'http://localhost:3000'
             resp['Access-Control-Allow-Credentials'] = 'true'
